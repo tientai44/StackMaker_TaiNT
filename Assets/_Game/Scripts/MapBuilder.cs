@@ -1,54 +1,82 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+public enum direction
+{
+    top,
+    down,
+    left,
+    right,
+    idle
+}
 public class MapBuilder : MonoBehaviour
 {
     // Start is called before the first frame update
     int[][] map ;
+    GameObject[][] l_MapBricks;
     int row, col;
     int brickCount=0;
+    int xStart, yStart;
+    [SerializeField] PlayerController playerController;
     [SerializeField] GameObject brickYellowPrefab;
     [SerializeField] GameObject brickBlackPrefab;
     [SerializeField] GameObject startPoint;
     [SerializeField] GameObject endPoint;
+
+    public int XStart { get => xStart; set => xStart = value; }
+    public int YStart { get => yStart; set => yStart = value; }
+    public GameObject[][] L_MapBricks { get => l_MapBricks; set => l_MapBricks = value; }
+    public int[][] Map { get => map; set => map = value; }
+
     void Start()
     {
         ReadFile("Map/Map1");
+        
         //Debug.Log(CountBrick(0, 0, "right"));
         //Debug.Log(CountBrick(1, 3, "left"));
         BuildMap();
+        playerController.OnInit();
 
     }
-    void BuildBrick(int posx,int posz,GameObject brick)
+    GameObject BuildBrick(int posx,int posz,GameObject brick)
     {
-        Instantiate(brick,new Vector3(posx,0,posz),brick.transform.rotation);
+        return Instantiate(brick,new Vector3(posx,0,posz),brick.transform.rotation);
     }
     void BuildMap()
     {
-        Debug.Log(row.ToString() + " " + col.ToString());
-        for(int i = 0; i < row; i++)
+        SetMap();
+        for (int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
             {
                 if(map[i][j] == 1)
                 {
-                    BuildBrick(i, j, brickYellowPrefab);
+                    l_MapBricks[i][j]=BuildBrick(i, j, brickYellowPrefab);
                 }
                 if (map[i][j] == 2)
                 {
-                    BuildBrick(i,j,brickBlackPrefab);
+                    l_MapBricks[i][j] = BuildBrick(i,j,brickBlackPrefab);
                 }
                 if (map[i][j] == 3)
                 {
-                    BuildBrick(i, j, startPoint);
+                    xStart = i;
+                    yStart = j;
+                    l_MapBricks[i][j] = BuildBrick(i, j, startPoint);
                 }
                 if (map[i][j] == 4)
                 {
-                    BuildBrick(i, j, endPoint);
+                    l_MapBricks[i][j] = BuildBrick(i, j, endPoint);
                 }
             }
         }
+    }
+    void SetMap()
+    {
+        l_MapBricks = new GameObject[row][];
+        for(int i = 0; i < row; i++)
+        {
+            l_MapBricks[i] = new GameObject[col];
+;       }
     }
     void ReadFile(string fileName)
     {
@@ -57,6 +85,7 @@ public class MapBuilder : MonoBehaviour
         string[] arrListStr = text.Split('\n');
         row = arrListStr.Length;
         map = new int[arrListStr.Length][];
+
         for (int i = 0; i < arrListStr.Length; i++)
         {
             string[] temp = arrListStr[i].Split(',');
@@ -72,9 +101,9 @@ public class MapBuilder : MonoBehaviour
 
             //}
         }
+       
         for (int i = 0; i < row; i++)
         {
-
             for (int j = 0; j < col; j++)
             {
                 //Debug.Log(i + " " + j + " " + map[i][j]);
@@ -82,60 +111,74 @@ public class MapBuilder : MonoBehaviour
                 {
                     brickCount += 1;
                 }
+                
             }
         }
         //Debug.Log("So gach " + brickCount.ToString());
     }
-    // Update is called once per frame
-    int CountBrick(int x,int y,string huong) {
+    public int CountBrick(int x,int y,direction direct) {
         int res = 0;
         int i,j;
-        switch (huong) {
-            case "below":
+        switch (direct) {
+            case direction.down:
                 j = y;
-                for(i = x; i < row; i++)
+                for(i = x+1; i < row; i++)
                 {
-                    if (map[i][j] == 1)
+                    if (map[i][j] >0)
                     {
                         res += 1;
                     }
+                    else
+                    {
+                        break;
+                    }
+                    
                 }
                 break;
-            case "top":
+            case direction.top:
                 j = y;
-                for (i = x; i >= 0; i--)
+                for (i = x-1; i >= 0; i--)
                 {
-                    if (map[i][j] == 1)
+                    if (map[i][j] > 0)
                     {
                         res += 1;
                     }
-                }
-                break;
-            case "left":
-                i = x;
-                for (j = y; j >= 0; j--)
-                {
-                    if (map[i][j] == 1)
+                    else
                     {
-                        res += 1;
+                        break;
                     }
                 }
                 break;
-            case "right":
+            case direction.left:
                 i = x;
-                for (j = y; j < col; j++)
+                for (j = y-1; j >= 0; j--)
                 {
-                    if (map[i][j] == 1)
+                    if (map[i][j] >0)
                     {
                         res += 1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                break;
+            case direction.right:
+                i = x;
+                for (j = y+1; j < col; j++)
+                {
+                    if (map[i][j] > 0)
+                    {
+                        res += 1;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
                 break;
         }
         return res;
     }
-    void Update()
-    {
-        
-    }
+    
 }
