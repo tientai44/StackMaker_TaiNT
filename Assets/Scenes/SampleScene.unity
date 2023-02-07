@@ -492,7 +492,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mapBuilder: {fileID: 1941282001}
   brickOwner: 0
-  speed: 20
+  speed: 2
   l_Bricks: []
   brickYellowPrefab: {fileID: 5226697761962130294, guid: bb2326953efdf2449bcbb803afe8ecc3, type: 3}
   brickWhitePrefab: {fileID: 5465089311985681295, guid: 28641e0c5907cc94f8e3ab2e702fb1ab, type: 3}

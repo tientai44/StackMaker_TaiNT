@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -12,7 +13,7 @@ public class PlayerController : MonoBehaviour
     
     [SerializeField] MapBuilder _mapBuilder;
     [SerializeField] int brickOwner = 0;
-    [SerializeField] private float speed=2f;
+    [SerializeField] private float speed=1f;
     [SerializeField] private List<GameObject> l_Bricks= new List<GameObject>(); 
     [SerializeField] private GameObject brickYellowPrefab;
     [SerializeField] private GameObject brickWhitePrefab;
@@ -22,6 +23,8 @@ public class PlayerController : MonoBehaviour
     bool isTouch=false;
     direction currentDirection=direction.idle;
     float duration = 1;
+    Queue<Vector3> l_Target= new Queue<Vector3>();
+    Vector3 target;
     // Start is called before the first frame update
     void Start()
     {
@@ -31,14 +34,45 @@ public class PlayerController : MonoBehaviour
     public void OnInit()
     {
         transform.position = new Vector3(_mapBuilder.XStart, 0.3f, _mapBuilder.YStart);
-        //transform.rotation = _mapBuilder.L_MapBricks[_mapBuilder.XStart][_mapBuilder.YStart].transform.rotation;
         
     }
     // Update is called once per frame
     void Update()
     {
-        GetPoint();
         
+        if(l_Target.Count > 0)
+        {
+            target = new Vector3(l_Target.Peek().x,transform.position.y,l_Target.Peek().z);
+            transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+            if (transform.position == target)
+            {
+                l_Target.Dequeue();
+                int x = (int)transform.position.x;
+                int y = (int)transform.position.z;
+                switch (_mapBuilder.Map[x][y])
+                {
+                    case 1:
+                        AddBrick(x, y);
+                        break;
+                    case 2:
+                        if (brickOwner <= 0)
+                        {
+                            Lose();
+                            return;
+                        }
+                        RemoveBrick(x, y);
+                        break;
+                    case 4:
+                        Win();
+                        break;
+                }
+            }
+            return;
+        }
+        if (l_Target.Count == 0)
+        {
+            GetPoint();
+        }
     }
     float CalCos(float x1,float y1,float x2,float y2)
     {
@@ -97,127 +131,43 @@ public class PlayerController : MonoBehaviour
         currentDirection = FindDirection(pointA, pointB);
         if (currentDirection == direction.top)
         {
-            //transform.Translate(Vector3.right*speed*Time.deltaTime);
             int numBrick = _mapBuilder.CountBrick((int)transform.position.x,(int)transform.position.z,direction.top);
-            Vector3 target = new Vector3(transform.position.x -  numBrick, transform.position.y,transform.position.z);
-            //transform.localPosition = Vector3.Lerp(transform.position,target , 3);
-            //Debug.Log(numBrick);
-            for(int i = 0; i < numBrick; i++)
+
+            for(int i = 1; i <= numBrick; i++)
             {
-                
-                transform.localPosition = Vector3.Lerp(transform.position, new Vector3(transform.position.x - 1, transform.position.y, transform.position.z), 1);
-                int x = (int)transform.position.x;
-                int y = (int)transform.position.z;
-                switch (_mapBuilder.Map[x][y])
-                {
-                    case 1:
-                        AddBrick(x,y);
-                        break;
-                    case 2:
-                        if (brickOwner <= 0)
-                        {
-                            Lose();
-                            return;
-                        }
-                        RemoveBrick(x,y);
-                        break;
-                    case 4:
-                        Win();
-                        break;
-                }
+                l_Target.Enqueue(new Vector3(transform.position.x - i, 0, transform.position.z));
+              
             }
+            
+            
         }
         else if (currentDirection == direction.down)
         {
             int numBrick = _mapBuilder.CountBrick((int)transform.position.x, (int)transform.position.z, direction.down);
-            Vector3 target = new Vector3(transform.position.x + numBrick, transform.position.y, transform.position.z);
-            //transform.localPosition = Vector3.Lerp(transform.position, target, 3);
-            //transform.Translate(Vector3.left*speed * Time.deltaTime);
-            for (int i = 0; i < numBrick; i++)
+
+            for (int i = 1; i <= numBrick; i++)
             {
-                
-                transform.localPosition = Vector3.Lerp(transform.position, new Vector3(transform.position.x + 1, transform.position.y, transform.position.z), 3);
-                int x = (int)transform.position.x;
-                int y = (int)transform.position.z;
-                switch(_mapBuilder.Map[x][y])
-                {
-                    case 1:
-                        AddBrick(x,y);
-                        break;
-                    case 2:
-                        if (brickOwner <= 0)
-                        {
-                            Lose();
-                            return;
-                        }
-                        RemoveBrick(x,y);
-                        break;
-                    case 4:
-                        Win();
-                        break;
-                }
+                l_Target.Enqueue(new Vector3(transform.position.x + i, 0, transform.position.z));
+
             }
         }
         else if (currentDirection == direction.right)
         {
             int numBrick = _mapBuilder.CountBrick((int)transform.position.x, (int)transform.position.z, direction.right);
-            Vector3 target = new Vector3(transform.position.x, transform.position.y, transform.position.z + numBrick);
-            //transform.localPosition = Vector3.Lerp(transform.position, target, 3);
-            //transform.Translate(Vector3.forward * speed * Time.deltaTime);
-            for (int i = 0; i < numBrick; i++)
+
+            for (int i = 1; i <= numBrick; i++)
             {
-                
-                transform.localPosition = Vector3.Lerp(transform.position, new Vector3(transform.position.x , transform.position.y, transform.position.z+1), 3);
-                int x = (int)transform.position.x;
-                int y = (int)transform.position.z;
-                switch (_mapBuilder.Map[x][y])
-                {
-                    case 1:
-                        AddBrick(x,y);
-                        break;
-                    case 2:
-                        if (brickOwner <= 0)
-                        {
-                            Lose();
-                            return;
-                        }
-                        RemoveBrick(x,y);
-                        break;
-                    case 4:
-                        Win();
-                        break;
-                }
+                l_Target.Enqueue(new Vector3(transform.position.x , 0, transform.position.z+i));
             }
         }
         else if (currentDirection == direction.left)
         {
-            //transform.Translate(Vector3.back * speed * Time.deltaTime);
             int numBrick = _mapBuilder.CountBrick((int)transform.position.x, (int)transform.position.z, direction.left);
-            Vector3 target = new Vector3(transform.position.x , transform.position.y, transform.position.z - numBrick);
-            //transform.localPosition = Vector3.Lerp(transform.position, target, 3);
-            for (int i = 0; i < numBrick; i++)
+
+            for (int i = 1; i <= numBrick; i++)
             {
-                
-                transform.localPosition = Vector3.Lerp(transform.position, new Vector3(transform.position.x, transform.position.y, transform.position.z - 1), 3);
-                int x = (int)transform.position.x;
-                int y = (int)transform.position.z;
-                switch (_mapBuilder.Map[x][y])
-                {
-                    case 1:
-                        AddBrick(x,y);
-                        break;
-                    case 2:                  
-                        if (brickOwner <= 0)
-                        {
-                            Lose();
-                            return;
-                        }
-                        RemoveBrick(x,y);
-                        break;
-                    case 4:
-                        Win();
-                        break;
-                }
+                l_Target.Enqueue(new Vector3(transform.position.x , 0, transform.position.z-i));
+
             }
         }
        
