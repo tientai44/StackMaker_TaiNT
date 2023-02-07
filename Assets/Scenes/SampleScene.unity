@@ -391,14 +391,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.27059805, y: -0.6532815, z: 0.27059805, w: 0.6532815}
+  m_LocalRotation: {x: 0.29315254, y: -0.5938583, z: 0.24598415, w: 0.70773286}
   m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 45, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 45, y: -80, z: 0}
 --- !u!114 &963194229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -492,7 +492,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mapBuilder: {fileID: 1941282001}
   brickOwner: 0
-  speed: 2
+  speed: 5
   l_Bricks: []
   brickYellowPrefab: {fileID: 5226697761962130294, guid: bb2326953efdf2449bcbb803afe8ecc3, type: 3}
   brickWhitePrefab: {fileID: 5465089311985681295, guid: 28641e0c5907cc94f8e3ab2e702fb1ab, type: 3}

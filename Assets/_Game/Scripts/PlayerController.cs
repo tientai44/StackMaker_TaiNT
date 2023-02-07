@@ -22,7 +22,6 @@ public class PlayerController : MonoBehaviour
     Vector3 pointA,pointB;
     bool isTouch=false;
     direction currentDirection=direction.idle;
-    float duration = 1;
     Queue<Vector3> l_Target= new Queue<Vector3>();
     Vector3 target;
     // Start is called before the first frame update
