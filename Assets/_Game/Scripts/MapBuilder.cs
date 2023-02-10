@@ -1,6 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
+
 public enum direction
 {
     top,
@@ -9,7 +13,7 @@ public enum direction
     right,
     idle
 }
-public class MapBuilder : MonoBehaviour
+public class MapBuilder : GOSingleton<MapBuilder>
 {
     // Start is called before the first frame update
     int[][] map ;
@@ -17,11 +21,15 @@ public class MapBuilder : MonoBehaviour
     int row, col;
     int brickCount=0;
     int xStart, yStart;
+    bool isTouch = false;
     [SerializeField] PlayerController playerController;
     [SerializeField] GameObject brickYellowPrefab;
     [SerializeField] GameObject brickBlackPrefab;
     [SerializeField] GameObject startPoint;
     [SerializeField] GameObject endPoint;
+    [SerializeField] LevelManager levelManager;
+    [SerializeField] UIManager uiManager;
+    Vector3 pointA, pointB;
 
     public int XStart { get => xStart; set => xStart = value; }
     public int YStart { get => yStart; set => yStart = value; }
@@ -30,19 +38,27 @@ public class MapBuilder : MonoBehaviour
 
     void Start()
     {
-        ReadFile("Map/Map1");
         
-        //Debug.Log(CountBrick(0, 0, "right"));
-        //Debug.Log(CountBrick(1, 3, "left"));
+    }
+    private void Update()
+    {
+        if (playerController.L_Target.Count == 0)
+        {
+            GetPoint();
+        }
+    }
+    public void OnInit()
+    {
+
+        ReadFile("Map/Map"+levelManager.CurrentLevel.ToString());
         BuildMap();
         playerController.OnInit();
-
     }
     GameObject BuildBrick(int posx,int posz,GameObject brick)
     {
         return Instantiate(brick,new Vector3(posx,0,posz),brick.transform.rotation);
     }
-    void BuildMap()
+    public void BuildMap()
     {
         SetMap();
         for (int i = 0; i < row; i++)
@@ -70,6 +86,7 @@ public class MapBuilder : MonoBehaviour
             }
         }
     }
+
     void SetMap()
     {
         l_MapBricks = new GameObject[row][];
@@ -78,7 +95,7 @@ public class MapBuilder : MonoBehaviour
             l_MapBricks[i] = new GameObject[col];
 ;       }
     }
-    void ReadFile(string fileName)
+    public void ReadFile(string fileName)
     {
         var textFile = Resources.Load<TextAsset>(fileName);
         string text = textFile.text;
@@ -181,4 +198,87 @@ public class MapBuilder : MonoBehaviour
         return res;
     }
     
+    public void DeleteMap()
+    {
+        for(int i = 0; i < row; i++)
+        {
+            for(int j=0;j < col; j++)
+            {
+                if (map[i][j]>0)
+                    Destroy(l_MapBricks[i][j].gameObject);
+            }
+        }
+    }
+    float CalCos(float x1, float y1, float x2, float y2)
+    {
+        return (x1 * x2 + y1 * y2) / (Mathf.Sqrt(x1 * x1 + y1 * y1) * Mathf.Sqrt(x2 * x2 + y2 * y2));
+    }
+    direction FindDirection(Vector3 pointA, Vector3 pointB)
+    {
+        Vector3 VectorAB = pointB - pointA;
+        float angle = Mathf.Acos(CalCos(1, 0, VectorAB.x, VectorAB.y));
+        if (angle <= Math.PI / 4)
+        {
+            return direction.right;
+        }
+        else if (angle <= 3 * Math.PI / 4)
+        {
+            if (VectorAB.y > 0)
+            {
+                return direction.top;
+            }
+            else
+            {
+                return direction.down;
+            }
+        }
+        else
+        {
+            return direction.left;
+        }
+
+    }
+
+    void GetPoint()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            pointA = Input.mousePosition;
+            //Debug.Log(pointA.x.ToString()+" "+pointA.y.ToString()+" "+pointA.z.ToString());
+            isTouch = true;
+        }
+        if (Input.GetMouseButtonUp(0))
+        {
+            isTouch = false;
+            playerController.CurrentDirection = FindDirection(pointA, pointB);
+            playerController.SetTarget();
+        }
+        if (isTouch)
+        {
+            pointB = Input.mousePosition;
+            //Debug.Log(pointB.x.ToString() + " " + pointB.y.ToString() + " " + pointB.z.ToString());
+
+        }
+    }
+    public void Win()
+    {
+        Debug.Log("You Win");
+        Debug.Log("Score: " + playerController.BrickOwner.ToString());
+        playerController.ClearBrick();
+        DeleteMap();
+        UIManager.GetInstance().EndGameMenu(true);
+        UIManager.GetInstance().UpLevelButton.GetComponent<Button>().enabled = true;
+
+    }
+    public void UpLevel()
+    {
+        levelManager.CurrentLevel += 1;
+        OnInit();
+    }
+    public void Lose()
+    {
+        Debug.Log("Game Over");
+        UIManager.GetInstance().EndGameMenu(true);
+        UIManager.GetInstance().UpLevelButton.GetComponent<Button>().enabled = false; 
+    }
 }
